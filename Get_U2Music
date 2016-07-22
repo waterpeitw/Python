@@ -1,0 +1,64 @@
+#-*- coding: utf-8 -*-　　 
+#-*- coding: cp950 -*-
+import requests
+import re
+import sys
+import time
+from threading import *
+from bs4 import BeautifulSoup
+
+
+
+
+
+def SaveToMp3(dic):
+	respost = requests.post("https://dvr.yout.com/mp3",data=dic)
+	with open(dic['title']+".mp3", "wb") as file:
+	     file.write(respost.content)
+	     print "[+] "+dic['title']+" download Sucess!!"
+
+def GetYoutThingy(dic):
+	resget = requests.get("https://yout.com/video/"+dic['video_id'])
+	m = re.search('var thingy = (.+?);',resget.text)
+	dic['thingy'] = m.group(1)
+	
+def GetYoutubeName(dic):
+	strtemp ="https://www.youtube.com/watch?v="+dic['video_id']
+	resget = requests.get(strtemp)
+	soup = BeautifulSoup(resget.text)
+	#print soup.select('title')[0].text
+	#print soup.select('title')[0].text
+	dic['title']  = soup.select('title')[0].text
+	
+	
+def  ReadFile(file):
+	txtfile = open (file)
+	for line in txtfile.readlines():
+		payload = {
+		"video_id":"",
+		"format":"mp3",
+		"title":"",
+		"start_time":"false",
+		"end_time":"false",
+		"thingy":"",
+		"audio_quality":"128k",
+
+		}
+		
+		video_id =	line.split('/')[3]
+		payload['video_id'] = video_id
+		GetYoutubeName(payload)
+		GetYoutThingy(payload)
+		#print payload['thingy']
+		print "Ready to download :" + payload['title'] 
+		SaveToMp3(payload)
+		time.sleep(1)
+		
+
+
+if len(sys.argv)==2:
+	ReadFile(sys.argv[1])
+	
+
+
+
